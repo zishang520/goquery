@@ -86,3 +86,58 @@ func TestForRange(t *testing.T) {
 		t.Errorf("expected initial selection to still have length %d, got %d", initLen, sel.Length())
 	}
 }
+
+func TestGenericMap(t *testing.T) {
+	sel := Doc().Find(".pvk-content")
+	vals := Map(sel, func(i int, s *Selection) *html.NodeType {
+		n := s.Get(0)
+		if n.Type == html.ElementNode {
+			return &n.Type
+		}
+		return nil
+	})
+	for _, v := range vals {
+		if v == nil || *v != html.ElementNode {
+			t.Error("Expected Map array result to be all 'div's.")
+		}
+	}
+	if len(vals) != 3 {
+		t.Errorf("Expected Map array result to have a length of 3, found %v.", len(vals))
+	}
+}
+
+func TestEachIter(t *testing.T) {
+	var cnt int
+
+	sel := Doc().Find(".hero-unit .row-fluid")
+
+	for i, s := range sel.EachIter() {
+		cnt++
+		t.Logf("At index %v, node %v", i, s.Nodes[0].Data)
+	}
+
+	sel = sel.Find("a")
+
+	if cnt != 4 {
+		t.Errorf("Expected Each() to call function 4 times, got %v times.", cnt)
+	}
+	assertLength(t, sel.Nodes, 6)
+}
+
+func TestEachIterWithBreak(t *testing.T) {
+	var cnt int
+
+	sel := Doc().Find(".hero-unit .row-fluid")
+	for i, s := range sel.EachIter() {
+		cnt++
+		t.Logf("At index %v, node %v", i, s.Nodes[0].Data)
+		break
+	}
+
+	sel = sel.Find("a")
+
+	if cnt != 1 {
+		t.Errorf("Expected Each() to call function 1 time, got %v times.", cnt)
+	}
+	assertLength(t, sel.Nodes, 6)
+}
